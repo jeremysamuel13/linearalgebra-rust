@@ -130,6 +130,7 @@ impl Display for Matrix {
 
         write!(f, "{}", res)
     }
+    
 }
 
 //OPS
