@@ -21,6 +21,34 @@ impl Matrix {
         }
     }
 
+    pub fn from_column_vec(data: &[f64]) -> Self{
+        Self{
+            data: Vec::from(data),
+            rows: {
+                if data.is_empty(){
+                    1
+                }else{
+                    data.len()
+                }
+            },
+            columns: 1,
+        }
+    }
+
+    pub fn from_row_vec(data: &[f64]) -> Self{
+        Self{
+            data: Vec::from(data),
+            rows: 1,
+            columns: {
+                if data.is_empty() {
+                    1
+                }else{
+                    data.len()
+                }
+            },
+        }
+    }
+
     pub fn set(&mut self, element: f64, row: usize, column: usize) -> () {
         if row > self.rows || column > self.columns {
             panic!("Entry of ({},{}) is not within the bounds of the matrix", row, column)
@@ -36,7 +64,7 @@ impl Matrix {
     }
 
     fn get_index(&mut self, row: usize, column: usize) -> usize {
-        return (self.columns * (row - 1)) + column;
+        (self.columns * (row - 1)) + column
     }
 
     //dot product of ONLY equal sized vectors
@@ -51,22 +79,22 @@ impl Matrix {
             res+=lhs[i]*rhs[i];
         }
 
-        return res;
+        res
     }
 
     pub fn get_row(&self, row: usize) -> Vec<f64>{
-        if row > self.rows || row <= 0 {
+        if row > self.rows {
             panic!("Row out of bounds")
         }
-        return self.data[(row-1)*self.columns..(row)*self.columns].to_vec();
+        self.data[(row-1)*self.columns..(row)*self.columns].to_vec()
     }
 
     pub fn get_column(&self, column: usize) -> Vec<f64>{
-        if column > self.columns || column <= 0 {
+        if column > self.columns {
             panic!("Column out of bounds")
         }
 
-        return self.data.iter().skip(column-1).step_by(self.columns).copied().collect();
+        self.data.iter().skip(column-1).step_by(self.columns).copied().collect()
     }
 
 
@@ -185,3 +213,38 @@ impl PartialEq for Matrix {
 impl Eq for Matrix {
 
 }
+
+#[macro_export]
+macro_rules! matrix {
+    () => {
+        {
+            // Handle the case when called with no arguments, i.e. matrix![]
+            use $crate::structures::matrix::Matrix;
+            Matrix::new(&vec![], 0, 0)
+        }
+    };
+    ($( $( $x: expr ),*);*) => {
+        {
+            use $crate::structures::matrix::Matrix;
+            use std::cmp;
+            let data = [ $( vec![$($x),*]),* ];
+            let rows = data.len();
+            let cols = {
+                if rows < 1 {
+                    0
+                }else{
+                    cmp::max(data[0].len(), 0)
+                }
+            };
+            let flat_data: Vec<f64> = data.into_iter()
+                .flat_map(|row| row.into_iter())
+                .cloned()
+                .collect();
+            Matrix::new(&flat_data, rows, cols)
+        }
+    }
+}
+
+
+
+
